@@ -7,15 +7,19 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.util.Validator;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import org.osgi.service.component.annotations.Activate;
@@ -52,12 +56,22 @@ public class OurFilesFormModelListener
       try {
         Map<String, String> fields = getFieldsAsMap(record);
 
-        InternetAddress from = new InternetAddress(fields.get("emailFrom"));
-        InternetAddress to = new InternetAddress(fields.get("emailTo"));
+        String emailFrom = fields.get("emailFrom");
+        String[] emailTos = fields.get("emailTo").split(StringPool.COMMA);
+
+        InternetAddress from = new InternetAddress(emailFrom);
+        InternetAddress[] tos = Arrays.stream(emailTos).map(emailTo -> {
+          try {
+            return new InternetAddress(emailTo);
+          } catch (AddressException e) {
+            _log.error(e.getLocalizedMessage(), e);
+          }
+          return null;
+        }).filter(Validator::isNotNull).toArray(InternetAddress[]::new);
 
         MailMessage mailMessage = new MailMessage();
         mailMessage.setFrom(from);
-        mailMessage.setTo(to);
+        mailMessage.setTo(tos);
         mailMessage.setSubject(fields.get("title"));
         mailMessage.setBody(fields.get("message"));
 
@@ -83,13 +97,17 @@ public class OurFilesFormModelListener
       String key = fieldValue.getFieldReference();
       String value = fieldValue.getValue().getString(defaultLocale);
 
-      fieldsAsMap.put(key, value);
-
-      if (_log.isDebugEnabled()) {
-        _log.debug("Field -> {}[{}]={}", key, fieldValue.getType(), value);
-      }
+      fieldsAsMap.merge(key, value, (previousValue, currentValue) ->
+          previousValue.concat(StringPool.COMMA + currentValue)
+      );
 
     });
+
+    if (_log.isDebugEnabled()) {
+      for (Entry<String, String> entry : fieldsAsMap.entrySet()) {
+        _log.debug("[{}]={}", entry.getKey(), entry.getValue());
+      }
+    }
 
     return fieldsAsMap;
   }
