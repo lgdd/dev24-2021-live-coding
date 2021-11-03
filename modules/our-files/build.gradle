@@ -1,0 +1,5 @@
+dependencies {
+	compileOnly group: "com.liferay.portal", name: "release.portal.api"
+	compileOnly group: "com.sun.mail", name: "jakarta.mail", version: "1.6.6"
+	compileOnly group: 'org.slf4j', name: 'slf4j-api'
+}
