@@ -2,6 +2,8 @@
 
 During a live coding session for the `/dev/24`, I decided to use the almost 2h I had to create a WeTransfer-like application. The goal is to generate discussions around anything that can happen during this process, but also see how much we can rely on Liferay out-of-the-box features to create such an application.
 
+[![video](https://pbs.twimg.com/media/FDQcfqHX0AEEbBv?format=jpg&name=large)](https://www.youtube.com/watch?v=PSxgzOfDe1Y "/dev/24 2021 - Session 1")
+
 ## Our Files
 
 `Our Files` is the name of our WeTransfer-like application. What we want to achieve:
