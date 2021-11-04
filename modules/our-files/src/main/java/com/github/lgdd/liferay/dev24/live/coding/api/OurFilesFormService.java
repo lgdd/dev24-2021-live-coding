@@ -50,7 +50,7 @@ public class OurFilesFormService {
       String value = fieldValue.getValue().getString(defaultLocale);
 
       fieldsAsMap.merge(key, value, (previousValue, currentValue) ->
-          previousValue.concat(StringPool.COMMA + currentValue)
+          previousValue.concat(delimiter + currentValue)
       );
 
     });
