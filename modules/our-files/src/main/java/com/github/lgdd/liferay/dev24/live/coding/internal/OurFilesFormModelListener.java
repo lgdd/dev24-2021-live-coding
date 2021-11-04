@@ -73,8 +73,8 @@ public class OurFilesFormModelListener
   private void _sendEmail(DDMFormInstanceRecordVersion record) {
 
     try {
-      final Map<String, String> fields = _ourFilesFormService.getFieldsAsMap(record,
-                                                                             StringPool.COMMA);
+      final Map<String, String> fields =
+          _ourFilesFormService.getFieldsAsMap(record, StringPool.COMMA);
 
       final String emailFrom = fields.get(FIELD_EMAIL_FROM);
       final String[] emailTos = fields.get(FIELD_EMAIL_TO).split(StringPool.COMMA);
