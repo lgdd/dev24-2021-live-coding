@@ -9,7 +9,6 @@ import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FI
 
 import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesService;
 import com.github.lgdd.liferay.dev24.live.coding.internal.config.OurFilesConfiguration;
-import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
@@ -21,7 +20,15 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import java.util.Arrays;
 import java.util.Map;
@@ -123,7 +130,20 @@ public class OurFilesFormModelListener
    * @return string as HTML mail body containing the message and a link to download the file to
    * share
    */
-  private String _buildHTMLBody(String message, JSONObject fileToShare) {
+  private String _buildHTMLBody(String message, JSONObject fileToShare)
+      throws PortalException {
+
+    long groupId = fileToShare.getLong("groupId");
+    long fileEntryId = fileToShare.getLong("fileEntryId");
+    Group group = _groupLocalService.getGroup(groupId);
+    Company company = _companyLocalService.getCompany(group.getCompanyId());
+    String portalURL = company.getPortalURL(groupId);
+    String context = PortalUtil.getPathFriendlyURLPublic();
+    String virtualHostSiteName =
+        "guest".equalsIgnoreCase(
+            GetterUtil.getString(PropsUtil.get("virtual.hosts.default.site.name"))) ?
+        "/guest" : "";
+    String fileDisplayPage = portalURL + context + virtualHostSiteName + "/d/" + fileEntryId;
 
     final StringBundler mailBody = new StringBundler();
     mailBody.append("<html>");
@@ -136,7 +156,7 @@ public class OurFilesFormModelListener
     mailBody.append("</p>");
     mailBody.append("<p>");
     mailBody.append("<a href=\"");
-    mailBody.append(fileToShare.get("url"));
+    mailBody.append(fileDisplayPage);
     mailBody.append("\">");
     mailBody.append(fileToShare.get("title"));
     mailBody.append("</a>");
@@ -159,7 +179,10 @@ public class OurFilesFormModelListener
   private MailService _mailService;
 
   @Reference
-  private DLFileEntryLocalService _fileEntryService;
+  private GroupLocalService _groupLocalService;
+
+  @Reference
+  private CompanyLocalService _companyLocalService;
 
   @Reference
   private OurFilesService _ourFilesService;
