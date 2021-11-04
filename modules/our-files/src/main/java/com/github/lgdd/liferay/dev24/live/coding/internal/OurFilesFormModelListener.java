@@ -1,7 +1,12 @@
 package com.github.lgdd.liferay.dev24.live.coding.internal;
 
 import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.CONFIG_PID;
+import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FIELD_EMAIL_FROM;
+import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FIELD_EMAIL_TO;
+import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FIELD_MESSAGE;
+import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FIELD_TITLE;
 
+import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesFormService;
 import com.github.lgdd.liferay.dev24.live.coding.internal.config.OurFilesConfiguration;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
@@ -54,10 +59,10 @@ public class OurFilesFormModelListener
       }
 
       try {
-        Map<String, String> fields = getFieldsAsMap(record);
+        Map<String, String> fields = _ourFilesFormService.getFieldsAsMap(record);
 
-        String emailFrom = fields.get("emailFrom");
-        String[] emailTos = fields.get("emailTo").split(StringPool.COMMA);
+        String emailFrom = fields.get(FIELD_EMAIL_FROM);
+        String[] emailTos = fields.get(FIELD_EMAIL_TO).split(StringPool.COMMA);
 
         InternetAddress from = new InternetAddress(emailFrom);
         InternetAddress[] tos = Arrays.stream(emailTos).map(emailTo -> {
@@ -72,8 +77,8 @@ public class OurFilesFormModelListener
         MailMessage mailMessage = new MailMessage();
         mailMessage.setFrom(from);
         mailMessage.setTo(tos);
-        mailMessage.setSubject(fields.get("title"));
-        mailMessage.setBody(fields.get("message"));
+        mailMessage.setSubject(fields.get(FIELD_TITLE));
+        mailMessage.setBody(fields.get(FIELD_MESSAGE));
 
         _mailService.sendEmail(mailMessage);
 
@@ -85,32 +90,6 @@ public class OurFilesFormModelListener
     super.onAfterUpdate(originalRecord, record);
   }
 
-  private Map<String, String> getFieldsAsMap(DDMFormInstanceRecordVersion record)
-      throws PortalException {
-
-    Locale defaultLocale = record.getDDMForm().getDefaultLocale();
-    Map<String, String> fieldsAsMap = new HashMap<>();
-
-    List<DDMFormFieldValue> fieldValues = record.getDDMFormValues().getDDMFormFieldValues();
-    fieldValues.forEach(fieldValue -> {
-
-      String key = fieldValue.getFieldReference();
-      String value = fieldValue.getValue().getString(defaultLocale);
-
-      fieldsAsMap.merge(key, value, (previousValue, currentValue) ->
-          previousValue.concat(StringPool.COMMA + currentValue)
-      );
-
-    });
-
-    if (_log.isDebugEnabled()) {
-      for (Entry<String, String> entry : fieldsAsMap.entrySet()) {
-        _log.debug("[{}]={}", entry.getKey(), entry.getValue());
-      }
-    }
-
-    return fieldsAsMap;
-  }
 
   @Activate
   @Modified
@@ -121,6 +100,9 @@ public class OurFilesFormModelListener
 
   @Reference
   private MailService _mailService;
+
+  @Reference
+  private OurFilesFormService _ourFilesFormService;
 
   private volatile OurFilesConfiguration _config;
 
