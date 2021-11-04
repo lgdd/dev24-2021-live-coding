@@ -1,5 +1,6 @@
 package com.github.lgdd.liferay.dev24.live.coding.api;
 
+import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.petra.string.StringPool;
@@ -33,13 +34,13 @@ public class OurFilesFormService {
    * @return a map with fields name as key and fields value(s) as value PortalException if the form
    * values can't be parsed properly
    */
-  public Map<String, String> getFieldsAsMap(DDMFormInstanceRecordVersion record,
+  public Map<String, String> getFieldsAsMap(DDMFormInstanceRecord record,
       String multipleValuesDelimiter)
       throws PortalException {
 
     final String delimiter = Validator.isNotNull(multipleValuesDelimiter) ?
                              multipleValuesDelimiter : MULTIPLE_VALUES_DELIMITER;
-    final Locale defaultLocale = record.getDDMForm().getDefaultLocale();
+    final Locale defaultLocale = record.getFormInstance().getDDMForm().getDefaultLocale();
     final Map<String, String> fieldsAsMap = new HashMap<>();
 
     final List<DDMFormFieldValue> fieldValues = record.getDDMFormValues().getDDMFormFieldValues();
@@ -53,12 +54,6 @@ public class OurFilesFormService {
       );
 
     });
-
-    if (_log.isDebugEnabled()) {
-      for (Entry<String, String> entry : fieldsAsMap.entrySet()) {
-        _log.debug("[{}]={}", entry.getKey(), entry.getValue());
-      }
-    }
 
     return fieldsAsMap;
   }

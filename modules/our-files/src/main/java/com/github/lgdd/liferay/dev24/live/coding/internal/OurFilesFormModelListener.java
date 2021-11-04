@@ -9,7 +9,7 @@ import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FI
 
 import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesFormService;
 import com.github.lgdd.liferay.dev24.live.coding.internal.config.OurFilesConfiguration;
-import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.string.StringBundler;
@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.util.Validator;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import org.osgi.service.component.annotations.Activate;
@@ -39,11 +40,10 @@ import org.slf4j.LoggerFactory;
     service = ModelListener.class
 )
 public class OurFilesFormModelListener
-    extends BaseModelListener<DDMFormInstanceRecordVersion> {
+    extends BaseModelListener<DDMFormInstanceRecord> {
 
   @Override
-  public void onAfterUpdate(DDMFormInstanceRecordVersion originalRecord,
-      DDMFormInstanceRecordVersion record)
+  public void onAfterUpdate(DDMFormInstanceRecord originalRecord, DDMFormInstanceRecord record)
       throws ModelListenerException {
 
     if (_log.isDebugEnabled()) {
@@ -70,11 +70,17 @@ public class OurFilesFormModelListener
    *
    * @param record instance record of a Liferay Form
    */
-  private void _sendEmail(DDMFormInstanceRecordVersion record) {
+  private void _sendEmail(DDMFormInstanceRecord record) {
 
     try {
       final Map<String, String> fields =
           _ourFilesFormService.getFieldsAsMap(record, StringPool.COMMA);
+
+      if (_log.isDebugEnabled()) {
+        for (Entry<String, String> entry : fields.entrySet()) {
+          _log.debug("[{}]={}", entry.getKey(), entry.getValue());
+        }
+      }
 
       final String emailFrom = fields.get(FIELD_EMAIL_FROM);
       final String[] emailTos = fields.get(FIELD_EMAIL_TO).split(StringPool.COMMA);
