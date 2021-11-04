@@ -1,25 +1,23 @@
 package com.github.lgdd.liferay.dev24.live.coding.api;
 
+import com.github.lgdd.liferay.dev24.live.coding.internal.config.OurFilesConfiguration;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
-import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.Validator;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.osgi.service.component.annotations.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component(
     immediate = true,
-    service = OurFilesFormService.class
+    service = OurFilesService.class
 )
-public class OurFilesFormService {
+public class OurFilesService {
 
   public static final String MULTIPLE_VALUES_DELIMITER = StringPool.COMMA;
 
@@ -58,6 +56,24 @@ public class OurFilesFormService {
     return fieldsAsMap;
   }
 
-  public static final Logger _log = LoggerFactory.getLogger(OurFilesFormService.class);
+  public ChronoUnit getChronoUnitFromConfig(OurFilesConfiguration config) {
 
+    switch (config.expirationUnit()) {
+      case "second":
+        return ChronoUnit.SECONDS;
+      case "minute":
+        return ChronoUnit.MINUTES;
+      case "hour":
+        return ChronoUnit.HOURS;
+      case "day":
+        return ChronoUnit.DAYS;
+      case "week":
+        return ChronoUnit.WEEKS;
+      case "month":
+        return ChronoUnit.MONTHS;
+      case "year":
+        return ChronoUnit.YEARS;
+    }
+    return null;
+  }
 }

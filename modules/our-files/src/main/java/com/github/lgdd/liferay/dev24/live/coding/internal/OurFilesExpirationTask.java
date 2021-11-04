@@ -4,15 +4,13 @@ package com.github.lgdd.liferay.dev24.live.coding.internal;
 import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.CONFIG_PID;
 import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FIELD_FILE_TO_SHARE;
 
-import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesFormService;
+import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesService;
 import com.github.lgdd.liferay.dev24.live.coding.internal.config.OurFilesConfiguration;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
-import com.liferay.document.library.kernel.service.DLFileEntryService;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
-import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -59,7 +57,7 @@ public class OurFilesExpirationTask
     }
 
     if (_config.formId() > 0) {
-      final ChronoUnit expirationUnit = getChronoUnitFromConfig();
+      final ChronoUnit expirationUnit = _ourFilesService.getChronoUnitFromConfig(_config);
       if (Validator.isNull(expirationUnit)) {
         throw new RuntimeException(
             "Expiration unit is null. Verify Our Files configuration under Control Panel > System Settings > Third Party > Our Files");
@@ -76,7 +74,7 @@ public class OurFilesExpirationTask
       }).filter(record -> {
         try {
         Map<String, String> fields =
-            _ourFilesFormService.getFieldsAsMap(record, StringPool.COMMA);
+            _ourFilesService.getFieldsAsMap(record, StringPool.COMMA);
         JSONObject fileToShare =
             JSONFactoryUtil.createJSONObject(fields.get(FIELD_FILE_TO_SHARE));
         long fileEntryId = GetterUtil.getLong(fileToShare.get("fileEntryId"));
@@ -100,7 +98,7 @@ public class OurFilesExpirationTask
         }
         try {
           Map<String, String> fields =
-              _ourFilesFormService.getFieldsAsMap(record, StringPool.COMMA);
+              _ourFilesService.getFieldsAsMap(record, StringPool.COMMA);
           JSONObject fileToShare =
               JSONFactoryUtil.createJSONObject(fields.get(FIELD_FILE_TO_SHARE));
           long fileEntryId = GetterUtil.getLong(fileToShare.get("fileEntryId"));
@@ -117,28 +115,6 @@ public class OurFilesExpirationTask
         }
       });
     }
-  }
-
-  private ChronoUnit getChronoUnitFromConfig() {
-
-    switch (_config.expirationUnit()) {
-      case "second":
-        return ChronoUnit.SECONDS;
-      case "minute":
-        return ChronoUnit.MINUTES;
-      case "hour":
-        return ChronoUnit.HOURS;
-      case "day":
-        return ChronoUnit.DAYS;
-      case "week":
-        return ChronoUnit.WEEKS;
-      case "month":
-        return ChronoUnit.MONTHS;
-      case "year":
-        return ChronoUnit.YEARS;
-    }
-
-    return null;
   }
 
   @Activate
@@ -185,7 +161,7 @@ public class OurFilesExpirationTask
   private DLFileEntryLocalService _fileEntryService;
 
   @Reference
-  private OurFilesFormService _ourFilesFormService;
+  private OurFilesService _ourFilesService;
 
   private volatile OurFilesConfiguration _config;
 

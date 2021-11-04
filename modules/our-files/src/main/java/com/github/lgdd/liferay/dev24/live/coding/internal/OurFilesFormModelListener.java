@@ -7,8 +7,9 @@ import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FI
 import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FIELD_MESSAGE;
 import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FIELD_TITLE;
 
-import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesFormService;
+import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesService;
 import com.github.lgdd.liferay.dev24.live.coding.internal.config.OurFilesConfiguration;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
@@ -74,7 +75,7 @@ public class OurFilesFormModelListener
 
     try {
       final Map<String, String> fields =
-          _ourFilesFormService.getFieldsAsMap(record, StringPool.COMMA);
+          _ourFilesService.getFieldsAsMap(record, StringPool.COMMA);
 
       if (_log.isDebugEnabled()) {
         for (Entry<String, String> entry : fields.entrySet()) {
@@ -158,7 +159,10 @@ public class OurFilesFormModelListener
   private MailService _mailService;
 
   @Reference
-  private OurFilesFormService _ourFilesFormService;
+  private DLFileEntryLocalService _fileEntryService;
+
+  @Reference
+  private OurFilesService _ourFilesService;
 
   private volatile OurFilesConfiguration _config;
 
