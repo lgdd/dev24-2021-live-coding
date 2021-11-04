@@ -7,5 +7,6 @@ public class OurFilesConstants {
   public static final String FIELD_EMAIL_TO = "emailTo";
   public static final String FIELD_TITLE = "title";
   public static final String FIELD_MESSAGE = "message";
+  public static final String FIELD_FILE_TO_SHARE = "fileToShare";
 
 }
