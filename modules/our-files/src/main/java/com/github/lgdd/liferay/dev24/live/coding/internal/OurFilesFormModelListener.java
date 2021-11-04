@@ -9,7 +9,6 @@ import static com.github.lgdd.liferay.dev24.live.coding.api.OurFilesConstants.FI
 import com.github.lgdd.liferay.dev24.live.coding.api.OurFilesFormService;
 import com.github.lgdd.liferay.dev24.live.coding.internal.config.OurFilesConfiguration;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
-import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.string.StringPool;
@@ -20,11 +19,7 @@ import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.util.Validator;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import org.osgi.service.component.annotations.Activate;
@@ -58,38 +53,49 @@ public class OurFilesFormModelListener
         _log.debug("formInstanceRecordId={}", record.getFormInstanceRecordId());
       }
 
-      try {
-        Map<String, String> fields = _ourFilesFormService.getFieldsAsMap(record);
+      _sendEmail(record);
 
-        String emailFrom = fields.get(FIELD_EMAIL_FROM);
-        String[] emailTos = fields.get(FIELD_EMAIL_TO).split(StringPool.COMMA);
-
-        InternetAddress from = new InternetAddress(emailFrom);
-        InternetAddress[] tos = Arrays.stream(emailTos).map(emailTo -> {
-          try {
-            return new InternetAddress(emailTo);
-          } catch (AddressException e) {
-            _log.error(e.getLocalizedMessage(), e);
-          }
-          return null;
-        }).filter(Validator::isNotNull).toArray(InternetAddress[]::new);
-
-        MailMessage mailMessage = new MailMessage();
-        mailMessage.setFrom(from);
-        mailMessage.setTo(tos);
-        mailMessage.setSubject(fields.get(FIELD_TITLE));
-        mailMessage.setBody(fields.get(FIELD_MESSAGE));
-
-        _mailService.sendEmail(mailMessage);
-
-      } catch (PortalException | AddressException e) {
-        _log.error(e.getLocalizedMessage(), e);
-      }
     }
 
     super.onAfterUpdate(originalRecord, record);
   }
 
+  /**
+   * Email each recipient using the given sender email, title and message to build the mail
+   * message.
+   *
+   * @param record instance record of a Liferay Form
+   */
+  private void _sendEmail(DDMFormInstanceRecordVersion record) {
+
+    try {
+      Map<String, String> fields = _ourFilesFormService.getFieldsAsMap(record, StringPool.COMMA);
+
+      String emailFrom = fields.get(FIELD_EMAIL_FROM);
+      String[] emailTos = fields.get(FIELD_EMAIL_TO).split(StringPool.COMMA);
+
+      InternetAddress from = new InternetAddress(emailFrom);
+      InternetAddress[] tos = Arrays.stream(emailTos).map(emailTo -> {
+        try {
+          return new InternetAddress(emailTo);
+        } catch (AddressException e) {
+          _log.error(e.getLocalizedMessage(), e);
+        }
+        return null;
+      }).filter(Validator::isNotNull).toArray(InternetAddress[]::new);
+
+      MailMessage mailMessage = new MailMessage();
+      mailMessage.setFrom(from);
+      mailMessage.setTo(tos);
+      mailMessage.setSubject(fields.get(FIELD_TITLE));
+      mailMessage.setBody(fields.get(FIELD_MESSAGE));
+
+      _mailService.sendEmail(mailMessage);
+
+    } catch (PortalException | AddressException e) {
+      _log.error(e.getLocalizedMessage(), e);
+    }
+  }
 
   @Activate
   @Modified
